@@ -1,4 +1,4 @@
-# mcp-client
+# @nicculus/mcp-client
 
 A TypeScript client library and CLI for connecting to a serverless MCP server over Streamable HTTP.
 
@@ -7,7 +7,7 @@ Companion to [mcp-infra](https://github.com/nicculus/mcp-infra), which deploys t
 ## Installation
 
 ```sh
-npm install mcp-client
+npm install @nicculus/mcp-client
 ```
 
 ## CLI
@@ -17,14 +17,14 @@ export MCP_ENDPOINT=https://YOUR_ENDPOINT/mcp
 export MCP_API_KEY=YOUR_API_KEY
 
 # List available tools
-mcp-client tools list
+@nicculus/mcp-client tools list
 
 # Call a tool
-mcp-client tools call <name> --args '{"key": "value"}'
+@nicculus/mcp-client tools call <name> --args '{"key": "value"}'
 
 # Machine-readable output
-mcp-client tools list --json
-mcp-client tools call <name> --args '{"key": "value"}' --json
+@nicculus/mcp-client tools list --json
+@nicculus/mcp-client tools call <name> --args '{"key": "value"}' --json
 ```
 
 Credentials can also be placed in a `.env` file in the working directory.
@@ -32,7 +32,7 @@ Credentials can also be placed in a `.env` file in the working directory.
 ## SDK
 
 ```ts
-import { MCPClient } from "mcp-client";
+import { MCPClient } from "@nicculus/mcp-client";
 
 const client = new MCPClient({
   endpoint: "https://YOUR_ENDPOINT/mcp",
