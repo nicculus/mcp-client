@@ -1,8 +1,8 @@
 # mcp-client
 
-A TypeScript client library and CLI for connecting to a serverless MCP server.
+A TypeScript client library and CLI for connecting to a serverless MCP server over Streamable HTTP.
 
-Companion to [mcp-infra](https://github.com/nicculus/mcp-infra), which handles the server side.
+Companion to [mcp-infra](https://github.com/nicculus/mcp-infra), which deploys the server to AWS, Azure, or GCP.
 
 ## Installation
 
@@ -12,31 +12,22 @@ npm install mcp-client
 
 ## CLI
 
-Set your credentials as environment variables, then use the `mcp-client` command:
-
 ```sh
 export MCP_ENDPOINT=https://YOUR_ENDPOINT/mcp
 export MCP_API_KEY=YOUR_API_KEY
-```
 
-### List available tools
-
-```sh
+# List available tools
 mcp-client tools list
-```
 
-### Call a tool
-
-```sh
+# Call a tool
 mcp-client tools call <name> --args '{"key": "value"}'
-```
 
-Both commands accept `--json` for machine-readable output:
-
-```sh
+# Machine-readable output
 mcp-client tools list --json
 mcp-client tools call <name> --args '{"key": "value"}' --json
 ```
+
+Credentials can also be placed in a `.env` file in the working directory.
 
 ## SDK
 
@@ -60,7 +51,7 @@ const result = await client.callTool({
 console.log(result.content);
 ```
 
-Each method opens a fresh connection, executes, and closes — no persistent connection to manage.
+Each method opens a fresh connection, executes, and closes — no persistent state to manage.
 
 ## Requirements
 

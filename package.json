@@ -5,6 +5,12 @@
   "type": "module",
   "main": "dist/client.js",
   "types": "dist/client.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    }
+  },
   "bin": {
     "mcp-client": "dist/cli.js"
   },
