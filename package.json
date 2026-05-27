@@ -1,6 +1,6 @@
 {
   "name": "@nicculus/mcp-client",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A TypeScript client library and CLI for connecting to a serverless MCP server",
   "type": "module",
   "main": "dist/client.js",
