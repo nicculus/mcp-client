@@ -1,22 +1,20 @@
-name: Publish to npm
+name: CI
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
-  publish:
+  ci:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          registry-url: "https://registry.npmjs.org"
 
       - run: npm ci
 
@@ -25,8 +23,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Publish
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
