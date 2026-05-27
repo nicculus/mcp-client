@@ -7,7 +7,7 @@ Companion to [mcp-infra](https://github.com/nicculus/mcp-infra), which deploys t
 ## Installation
 
 ```sh
-npm install @nicculus/mcp-client
+npm install -g @nicculus/mcp-client
 ```
 
 ## CLI
@@ -17,14 +17,20 @@ export MCP_ENDPOINT=https://YOUR_ENDPOINT/mcp
 export MCP_API_KEY=YOUR_API_KEY
 
 # List available tools
-@nicculus/mcp-client tools list
+mcp-client tools list
 
 # Call a tool
-@nicculus/mcp-client tools call <name> --args '{"key": "value"}'
+mcp-client tools call <name> --args '{"key": "value"}'
 
 # Machine-readable output
-@nicculus/mcp-client tools list --json
-@nicculus/mcp-client tools call <name> --args '{"key": "value"}' --json
+mcp-client tools list --json
+mcp-client tools call <name> --args '{"key": "value"}' --json
+```
+
+For one-off use without a global install:
+
+```sh
+npx @nicculus/mcp-client tools list
 ```
 
 Credentials can also be placed in a `.env` file in the working directory.
