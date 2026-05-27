@@ -17,7 +17,7 @@ function getEndpoint(): string {
   return endpoint;
 }
 
-function parseHeaders(headerFlags: string[]): Record<string, string> {
+export function parseHeaders(headerFlags: string[]): Record<string, string> {
   const headers: Record<string, string> = {};
 
   const envHeaders = process.env.MCP_HEADERS;
@@ -129,7 +129,11 @@ tools
     }
   });
 
-program.parseAsync(process.argv).catch((err: unknown) => {
-  console.error("Error:", err instanceof Error ? err.message : err);
-  process.exit(1);
-});
+// Only parse when executed directly, not when imported in tests
+const { fileURLToPath } = await import("url");
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
+  program.parseAsync(process.argv).catch((err: unknown) => {
+    console.error("Error:", err instanceof Error ? err.message : err);
+    process.exit(1);
+  });
+}
