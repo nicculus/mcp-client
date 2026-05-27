@@ -1,6 +1,11 @@
+import { createRequire } from "module";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
+const { version } = createRequire(import.meta.url)("../package.json") as {
+  version: string;
+};
 
 export interface MCPClientConfig {
   endpoint: string;
@@ -31,7 +36,7 @@ export class MCPClient {
   }
 
   private async withClient<T>(fn: (client: Client) => Promise<T>): Promise<T> {
-    const client = new Client({ name: "mcp-client", version: "0.1.0" });
+    const client = new Client({ name: "mcp-client", version });
     const transport = this.createTransport();
     await client.connect(transport);
     try {

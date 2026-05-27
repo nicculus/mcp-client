@@ -1,7 +1,12 @@
 #!/usr/bin/env node
+import { createRequire } from "module";
 import "dotenv/config";
 import { Command } from "commander";
 import { MCPClient } from "./client.js";
+
+const { version } = createRequire(import.meta.url)("../package.json") as {
+  version: string;
+};
 
 function getConfig() {
   const endpoint = process.env.MCP_ENDPOINT;
@@ -24,7 +29,7 @@ const program = new Command();
 program
   .name("mcp-client")
   .description("CLI for interacting with a serverless MCP server")
-  .version("0.1.0")
+  .version(version)
   .addHelpText(
     "after",
     `
