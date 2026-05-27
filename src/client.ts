@@ -9,9 +9,6 @@ const { version } = createRequire(import.meta.url)("../package.json") as {
 
 export interface MCPClientConfig {
   endpoint: string;
-  /** Convenience shorthand — sets the x-api-key header.
-      If both headers and apiKey are provided, headers wins on conflict. */
-  apiKey?: string;
   headers?: Record<string, string>;
 }
 
@@ -27,22 +24,11 @@ export class MCPClient {
     this.config = config;
   }
 
-  private resolveHeaders(): Record<string, string> {
-    const headers: Record<string, string> = {};
-    if (this.config.apiKey) {
-      headers["x-api-key"] = this.config.apiKey;
-    }
-    if (this.config.headers) {
-      Object.assign(headers, this.config.headers);
-    }
-    return headers;
-  }
-
   private createTransport(): StreamableHTTPClientTransport {
     const url = new URL(this.config.endpoint);
     return new StreamableHTTPClientTransport(url, {
       requestInit: {
-        headers: this.resolveHeaders(),
+        headers: this.config.headers ?? {},
       },
     });
   }

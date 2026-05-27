@@ -14,7 +14,7 @@ npm install -g @nicculus/mcp-client
 
 ```sh
 export MCP_ENDPOINT=https://YOUR_ENDPOINT/mcp
-export MCP_API_KEY=YOUR_API_KEY
+export MCP_HEADERS="x-api-key:YOUR_KEY"
 
 # List available tools
 mcp-client tools list
@@ -27,8 +27,8 @@ mcp-client tools list --json
 mcp-client tools call <name> --args '{"key": "value"}' --json
 
 # Custom headers (repeatable)
-mcp-client tools list --header "Authorization:Bearer tok123"
-mcp-client tools list --header "X-Custom:foo" --header "X-Other:bar"
+mcp-client tools list --header "x-api-key:YOUR_KEY"
+mcp-client tools list --header "Authorization:Bearer tok123" --header "X-Custom:foo"
 ```
 
 For one-off use without a global install:
@@ -40,35 +40,21 @@ npx @nicculus/mcp-client tools list
 Credentials can also be placed in a `.env` file in the working directory. Additional headers can be set via `MCP_HEADERS` as comma-separated `key:value` pairs:
 
 ```sh
-MCP_HEADERS="Authorization:Bearer tok123,X-Custom:foo"
+MCP_HEADERS="x-api-key:YOUR_KEY,X-Custom:foo"
 ```
 
 ## SDK
-
-### API key (shorthand)
 
 ```ts
 import { MCPClient } from "@nicculus/mcp-client";
 
 const client = new MCPClient({
   endpoint: "https://YOUR_ENDPOINT/mcp",
-  apiKey: "YOUR_API_KEY",
-});
-```
-
-### Custom headers
-
-```ts
-const client = new MCPClient({
-  endpoint: "https://YOUR_ENDPOINT/mcp",
   headers: {
-    "Authorization": "Bearer YOUR_TOKEN",
-    "X-Custom-Header": "value",
+    "x-api-key": "YOUR_KEY",
   },
 });
 ```
-
-`apiKey` is a convenience shorthand that sets the `x-api-key` header. For other auth schemes, use `headers` directly. If both are set, explicit `headers` take precedence.
 
 ### Usage
 
@@ -90,7 +76,7 @@ Each method opens a fresh connection, executes, and closes — no persistent sta
 ## Requirements
 
 - Node.js 18+
-- An MCP server endpoint and API key (see [mcp-infra](https://github.com/nicculus/mcp-infra))
+- An MCP server endpoint (see [mcp-infra](https://github.com/nicculus/mcp-infra))
 
 ## License
 

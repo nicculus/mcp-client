@@ -8,20 +8,13 @@ const { version } = createRequire(import.meta.url)("../package.json") as {
   version: string;
 };
 
-function getConfig() {
+function getEndpoint(): string {
   const endpoint = process.env.MCP_ENDPOINT;
-  const apiKey = process.env.MCP_API_KEY;
-
   if (!endpoint) {
     console.error("Error: MCP_ENDPOINT environment variable is required");
     process.exit(1);
   }
-  if (!apiKey && !process.env.MCP_HEADERS) {
-    console.error("Error: MCP_API_KEY or MCP_HEADERS environment variable is required");
-    process.exit(1);
-  }
-
-  return { endpoint, apiKey };
+  return endpoint;
 }
 
 function parseHeaders(headerFlags: string[]): Record<string, string> {
@@ -52,11 +45,10 @@ function parseHeaders(headerFlags: string[]): Record<string, string> {
 }
 
 function buildClient(headerFlags: string[]): MCPClient {
-  const { endpoint, apiKey } = getConfig();
+  const endpoint = getEndpoint();
   const headers = parseHeaders(headerFlags);
   return new MCPClient({
     endpoint,
-    apiKey,
     headers: Object.keys(headers).length > 0 ? headers : undefined,
   });
 }
@@ -72,8 +64,7 @@ program
     `
 Environment variables:
   MCP_ENDPOINT   Your MCP server endpoint URL (e.g. https://YOUR_ENDPOINT/mcp)
-  MCP_API_KEY    Your API key (sets x-api-key header)
-  MCP_HEADERS    Additional headers as comma-separated key:value pairs`
+  MCP_HEADERS    Headers as comma-separated key:value pairs (e.g. "x-api-key:YOUR_KEY")`
   );
 
 const tools = program.command("tools").description("Manage and call tools");
