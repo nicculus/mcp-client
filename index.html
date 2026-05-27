@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@nicculus/mcp-client</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --border:    #30363d;
+      --accent:    #58a6ff;
+      --accent2:   #3fb950;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --code-bg:   #1f2428;
+      --radius:    8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    header .badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    header nav {
+      margin-left: auto;
+      display: flex;
+      gap: 1.25rem;
+      font-size: 0.9rem;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      max-width: 520px;
+      margin: 0 auto 1.75rem;
+    }
+
+    .hero .install {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.6rem 1.2rem;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.95rem;
+      color: var(--accent2);
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    section {
+      padding: 3rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:last-child { border-bottom: none; }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    p { margin-bottom: 0.9rem; color: var(--muted); }
+    p:last-child { margin-bottom: 0; }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    p code, li code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.85em;
+      color: var(--text);
+    }
+
+    .kw  { color: #ff7b72; }
+    .str { color: #a5d6ff; }
+    .cmt { color: #8b949e; font-style: italic; }
+    .fn  { color: #d2a8ff; }
+    .var { color: #ffa657; }
+    .num { color: #79c0ff; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+
+    .card h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .card p { font-size: 0.88rem; margin: 0; }
+
+    ul { padding-left: 1.4rem; color: var(--muted); }
+    ul li { margin-bottom: 0.35rem; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>@nicculus/mcp-client</h1>
+  <span class="badge">v0.3.0</span>
+  <nav>
+    <a href="https://github.com/nicculus/mcp-client">GitHub</a>
+    <a href="https://github.com/nicculus/mcp-infra">mcp-infra</a>
+    <a href="https://www.npmjs.com/package/@nicculus/mcp-client">npm</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <h2>MCP over the wire, simplified</h2>
+  <p>TypeScript client library and CLI for connecting to a serverless MCP server over Streamable HTTP.</p>
+  <div class="install"><code>npm install -g @nicculus/mcp-client</code></div>
+</div>
+
+<div class="container">
+
+  <section>
+    <h3>Features</h3>
+    <div class="grid">
+      <div class="card">
+        <h4>SDK + CLI</h4>
+        <p>Use as an importable TypeScript library or a ready-made terminal command.</p>
+      </div>
+      <div class="card">
+        <h4>Streamable HTTP</h4>
+        <p>Built on the MCP SDK's <code>StreamableHTTPClientTransport</code> — no WebSocket setup needed.</p>
+      </div>
+      <div class="card">
+        <h4>Any cloud</h4>
+        <p>Works with MCP servers deployed on AWS, GCP, or Azure via <a href="https://github.com/nicculus/mcp-infra">mcp-infra</a>.</p>
+      </div>
+      <div class="card">
+        <h4>Header auth</h4>
+        <p>Pass <code>x-api-key</code>, <code>Authorization</code>, or custom headers via env or flag.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3>CLI usage</h3>
+    <p>Set your endpoint and key once, then explore any MCP server from the terminal.</p>
+    <pre><code><span class="cmt"># Set credentials (or place in .env)</span>
+<span class="kw">export</span> <span class="var">MCP_ENDPOINT</span>=https://your-endpoint.example.com/mcp
+<span class="kw">export</span> <span class="var">MCP_HEADERS</span>=<span class="str">"x-api-key:YOUR_KEY"</span>
+
+<span class="cmt"># List available tools</span>
+mcp-client tools list
+
+<span class="cmt"># Call a tool</span>
+mcp-client tools call get_repo_summary --args <span class="str">'{"repo_url":"https://github.com/owner/repo"}'</span>
+
+<span class="cmt"># Machine-readable output</span>
+mcp-client tools list --json
+
+<span class="cmt"># Per-request headers (repeatable)</span>
+mcp-client tools list --header <span class="str">"x-api-key:KEY"</span> --header <span class="str">"X-Custom:foo"</span></code></pre>
+    <p>One-off use without a global install:</p>
+    <pre><code>npx @nicculus/mcp-client tools list</code></pre>
+  </section>
+
+  <section>
+    <h3>SDK usage</h3>
+    <p>Import <code>MCPClient</code> in any TypeScript or Node.js project. Each method opens a fresh connection, calls the server, and closes — no persistent state to manage.</p>
+    <pre><code><span class="kw">import</span> { <span class="var">MCPClient</span> } <span class="kw">from</span> <span class="str">"@nicculus/mcp-client"</span>;
+
+<span class="kw">const</span> <span class="var">client</span> = <span class="kw">new</span> <span class="fn">MCPClient</span>({
+  endpoint: <span class="str">"https://your-endpoint.example.com/mcp"</span>,
+  headers: { <span class="str">"x-api-key"</span>: <span class="str">"YOUR_KEY"</span> },
+});
+
+<span class="cmt">// List available tools</span>
+<span class="kw">const</span> <span class="var">tools</span> = <span class="kw">await</span> <span class="var">client</span>.<span class="fn">listTools</span>();
+console.<span class="fn">log</span>(<span class="var">tools</span>.<span class="fn">map</span>(<span class="var">t</span> => <span class="var">t</span>.name));
+
+<span class="cmt">// Call a tool</span>
+<span class="kw">const</span> <span class="var">result</span> = <span class="kw">await</span> <span class="var">client</span>.<span class="fn">callTool</span>({
+  name: <span class="str">"get_repo_summary"</span>,
+  arguments: { repo_url: <span class="str">"https://github.com/anthropics/anthropic-sdk-python"</span> },
+});
+console.<span class="fn">log</span>(<span class="var">result</span>.content);</code></pre>
+  </section>
+
+  <section>
+    <h3>Environment variables</h3>
+    <p>The CLI reads these at startup. Both can be placed in a <code>.env</code> file in the working directory.</p>
+    <div class="grid">
+      <div class="card">
+        <h4>MCP_ENDPOINT</h4>
+        <p>Full URL to the MCP server — e.g. <code>https://abc123.execute-api.us-east-1.amazonaws.com/mcp</code></p>
+      </div>
+      <div class="card">
+        <h4>MCP_HEADERS</h4>
+        <p>Comma-separated <code>key:value</code> pairs — e.g. <code>"x-api-key:s3cr3t,X-Custom:foo"</code></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3>Requirements</h3>
+    <ul>
+      <li>Node.js 18+</li>
+      <li>An MCP server endpoint — deploy one with <a href="https://github.com/nicculus/mcp-infra">mcp-infra</a></li>
+    </ul>
+  </section>
+
+</div>
+
+<footer>
+  MIT License &mdash; <a href="https://github.com/nicculus/mcp-client">github.com/nicculus/mcp-client</a>
+</footer>
+
+</body>
+</html>
