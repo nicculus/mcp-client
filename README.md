@@ -25,6 +25,10 @@ mcp-client tools call <name> --args '{"key": "value"}'
 # Machine-readable output
 mcp-client tools list --json
 mcp-client tools call <name> --args '{"key": "value"}' --json
+
+# Custom headers (repeatable)
+mcp-client tools list --header "Authorization:Bearer tok123"
+mcp-client tools list --header "X-Custom:foo" --header "X-Other:bar"
 ```
 
 For one-off use without a global install:
@@ -33,9 +37,15 @@ For one-off use without a global install:
 npx @nicculus/mcp-client tools list
 ```
 
-Credentials can also be placed in a `.env` file in the working directory.
+Credentials can also be placed in a `.env` file in the working directory. Additional headers can be set via `MCP_HEADERS` as comma-separated `key:value` pairs:
+
+```sh
+MCP_HEADERS="Authorization:Bearer tok123,X-Custom:foo"
+```
 
 ## SDK
+
+### API key (shorthand)
 
 ```ts
 import { MCPClient } from "@nicculus/mcp-client";
@@ -44,7 +54,25 @@ const client = new MCPClient({
   endpoint: "https://YOUR_ENDPOINT/mcp",
   apiKey: "YOUR_API_KEY",
 });
+```
 
+### Custom headers
+
+```ts
+const client = new MCPClient({
+  endpoint: "https://YOUR_ENDPOINT/mcp",
+  headers: {
+    "Authorization": "Bearer YOUR_TOKEN",
+    "X-Custom-Header": "value",
+  },
+});
+```
+
+`apiKey` is a convenience shorthand that sets the `x-api-key` header. For other auth schemes, use `headers` directly. If both are set, explicit `headers` take precedence.
+
+### Usage
+
+```ts
 // List available tools
 const tools = await client.listTools();
 console.log(tools.map((t) => t.name));

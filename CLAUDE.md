@@ -35,23 +35,23 @@ mcp-client tools list
 
 ## Environment variables
 
-The CLI reads these at runtime — no config file, no flags for credentials:
+The CLI reads these at runtime — can also be placed in a `.env` file:
 
 | Variable | Description |
 |---|---|
 | `MCP_ENDPOINT` | Full URL to the MCP server (e.g. `https://YOUR_ENDPOINT/mcp`) |
-| `MCP_API_KEY` | API key sent as `x-api-key` header |
+| `MCP_API_KEY` | Convenience shorthand — sets the `x-api-key` header |
+| `MCP_HEADERS` | Additional headers as comma-separated `key:value` pairs |
 
 ## Architecture
 
-**`src/client.ts`** — `MCPClient` wraps `@modelcontextprotocol/sdk`. Each public method (`listTools`, `callTool`) opens a fresh connection, executes, and closes. This keeps the library stateless and safe for one-shot CLI use. The transport is always Streamable HTTP (`StreamableHTTPClientTransport`) with the `x-api-key` header injected.
+**`src/client.ts`** — `MCPClient` wraps `@modelcontextprotocol/sdk`. Each public method (`listTools`, `callTool`) opens a fresh connection, executes, and closes. The transport is always Streamable HTTP (`StreamableHTTPClientTransport`). Headers are resolved by `resolveHeaders()`: `apiKey` sets `x-api-key` first, then `headers` is merged on top so explicit header values win on conflict.
 
-**`src/cli.ts`** — `commander`-based CLI. Commands are namespaced under `tools` (`tools list`, `tools call <name>`). All commands accept `--json` for machine-readable output. Config is read from environment variables via a shared `getConfig()` helper that exits early with a clear error if variables are missing.
+**`src/cli.ts`** — `commander`-based CLI. Commands are namespaced under `tools` (`tools list`, `tools call <name>`). All commands accept `--json` for machine-readable output and `--header key:value` (repeatable) for custom headers. `buildClient()` merges `MCP_HEADERS` env var and `--header` flags before constructing the client.
 
 ## Conventions
 
 - `--json` flag on every command outputs raw JSON for scripting
 - Default (human) output for `tools list` is name + description; for `tools call` it prints text content directly
-- Endpoint URLs use `YOUR_ENDPOINT` as placeholder in docs; `MCP_ENDPOINT` at runtime
-- API key header is always `x-api-key` — matches the Lambda auth middleware in `mcp-infra`
+- `apiKey` is a convenience shorthand for `x-api-key`; use `headers` for any other auth scheme
 - ESM throughout (`"type": "module"`) — imports within `src/` must use `.js` extensions

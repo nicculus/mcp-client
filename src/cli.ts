@@ -16,12 +16,49 @@ function getConfig() {
     console.error("Error: MCP_ENDPOINT environment variable is required");
     process.exit(1);
   }
-  if (!apiKey) {
-    console.error("Error: MCP_API_KEY environment variable is required");
+  if (!apiKey && !process.env.MCP_HEADERS) {
+    console.error("Error: MCP_API_KEY or MCP_HEADERS environment variable is required");
     process.exit(1);
   }
 
   return { endpoint, apiKey };
+}
+
+function parseHeaders(headerFlags: string[]): Record<string, string> {
+  const headers: Record<string, string> = {};
+
+  const envHeaders = process.env.MCP_HEADERS;
+  if (envHeaders) {
+    for (const pair of envHeaders.split(",")) {
+      const idx = pair.indexOf(":");
+      if (idx === -1) {
+        console.error(`Invalid MCP_HEADERS format: ${pair} (expected key:value)`);
+        process.exit(1);
+      }
+      headers[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
+    }
+  }
+
+  for (const h of headerFlags) {
+    const idx = h.indexOf(":");
+    if (idx === -1) {
+      console.error(`Invalid header format: ${h} (expected key:value)`);
+      process.exit(1);
+    }
+    headers[h.slice(0, idx).trim()] = h.slice(idx + 1).trim();
+  }
+
+  return headers;
+}
+
+function buildClient(headerFlags: string[]): MCPClient {
+  const { endpoint, apiKey } = getConfig();
+  const headers = parseHeaders(headerFlags);
+  return new MCPClient({
+    endpoint,
+    apiKey,
+    headers: Object.keys(headers).length > 0 ? headers : undefined,
+  });
 }
 
 const program = new Command();
@@ -35,7 +72,8 @@ program
     `
 Environment variables:
   MCP_ENDPOINT   Your MCP server endpoint URL (e.g. https://YOUR_ENDPOINT/mcp)
-  MCP_API_KEY    Your API key`
+  MCP_API_KEY    Your API key (sets x-api-key header)
+  MCP_HEADERS    Additional headers as comma-separated key:value pairs`
   );
 
 const tools = program.command("tools").description("Manage and call tools");
@@ -43,9 +81,10 @@ const tools = program.command("tools").description("Manage and call tools");
 tools
   .command("list")
   .description("List all available tools")
+  .option("--header <key:value>", "custom header (repeatable)", (val: string, acc: string[]) => { acc.push(val); return acc; }, [] as string[])
   .option("--json", "Output raw JSON")
   .action(async (opts) => {
-    const client = new MCPClient(getConfig());
+    const client = buildClient(opts.header as string[]);
     const result = await client.listTools();
 
     if (opts.json) {
@@ -70,6 +109,7 @@ tools
   .command("call <name>")
   .description("Call a tool by name")
   .option("-a, --args <json>", "Tool arguments as a JSON string", "{}")
+  .option("--header <key:value>", "custom header (repeatable)", (val: string, acc: string[]) => { acc.push(val); return acc; }, [] as string[])
   .option("--json", "Output raw JSON")
   .action(async (name: string, opts) => {
     let args: Record<string, unknown>;
@@ -80,7 +120,7 @@ tools
       process.exit(1);
     }
 
-    const client = new MCPClient(getConfig());
+    const client = buildClient(opts.header as string[]);
     const result = await client.callTool({ name, arguments: args });
 
     if (opts.json) {
