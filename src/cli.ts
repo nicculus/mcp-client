@@ -53,6 +53,9 @@ function buildClient(headerFlags: string[]): MCPClient {
   });
 }
 
+const headerOption = (cmd: ReturnType<Command["command"]>) =>
+  cmd.option("--header <key:value>", "custom header (repeatable)", (val: string, acc: string[]) => { acc.push(val); return acc; }, [] as string[]);
+
 const program = new Command();
 
 program
@@ -67,41 +70,30 @@ Environment variables:
   MCP_HEADERS    Headers as comma-separated key:value pairs (e.g. "x-api-key:YOUR_KEY")`
   );
 
+// --- tools ------------------------------------------------------------------
+
 const tools = program.command("tools").description("Manage and call tools");
 
-tools
+headerOption(tools
   .command("list")
   .description("List all available tools")
-  .option("--header <key:value>", "custom header (repeatable)", (val: string, acc: string[]) => { acc.push(val); return acc; }, [] as string[])
-  .option("--json", "Output raw JSON")
+  .option("--json", "Output raw JSON"))
   .action(async (opts) => {
     const client = buildClient(opts.header as string[]);
     const result = await client.listTools();
-
-    if (opts.json) {
-      console.log(JSON.stringify(result, null, 2));
-      return;
-    }
-
-    if (result.length === 0) {
-      console.log("No tools available.");
-      return;
-    }
-
+    if (opts.json) { console.log(JSON.stringify(result, null, 2)); return; }
+    if (result.length === 0) { console.log("No tools available."); return; }
     for (const tool of result) {
       console.log(`${tool.name}`);
-      if (tool.description) {
-        console.log(`  ${tool.description}`);
-      }
+      if (tool.description) console.log(`  ${tool.description}`);
     }
   });
 
-tools
+headerOption(tools
   .command("call <name>")
   .description("Call a tool by name")
   .option("-a, --args <json>", "Tool arguments as a JSON string", "{}")
-  .option("--header <key:value>", "custom header (repeatable)", (val: string, acc: string[]) => { acc.push(val); return acc; }, [] as string[])
-  .option("--json", "Output raw JSON")
+  .option("--json", "Output raw JSON"))
   .action(async (name: string, opts) => {
     let args: Record<string, unknown>;
     try {
@@ -110,24 +102,93 @@ tools
       console.error("Error: --args must be valid JSON");
       process.exit(1);
     }
-
     const client = buildClient(opts.header as string[]);
     const result = await client.callTool({ name, arguments: args });
-
-    if (opts.json) {
-      console.log(JSON.stringify(result, null, 2));
-      return;
-    }
-
+    if (opts.json) { console.log(JSON.stringify(result, null, 2)); return; }
     const content = Array.isArray(result.content) ? result.content : [];
     for (const item of content as Array<{ type: string; text?: string }>) {
-      if (item.type === "text") {
-        console.log(item.text);
-      } else {
-        console.log(JSON.stringify(item, null, 2));
-      }
+      if (item.type === "text") console.log(item.text);
+      else console.log(JSON.stringify(item, null, 2));
     }
   });
+
+// --- resources --------------------------------------------------------------
+
+const resources = program.command("resources").description("Read server resources");
+
+headerOption(resources
+  .command("list")
+  .description("List available resources")
+  .option("--json", "Output raw JSON"))
+  .action(async (opts) => {
+    const client = buildClient(opts.header as string[]);
+    const result = await client.listResources();
+    if (opts.json) { console.log(JSON.stringify(result, null, 2)); return; }
+    if (result.length === 0) { console.log("No resources available."); return; }
+    for (const r of result) {
+      console.log(`${r.uri}${r.description ? ` — ${r.description}` : ""}`);
+    }
+  });
+
+headerOption(resources
+  .command("read <uri>")
+  .description("Read a resource by URI")
+  .option("--json", "Output raw JSON"))
+  .action(async (uri: string, opts) => {
+    const client = buildClient(opts.header as string[]);
+    const result = await client.readResource(uri);
+    if (opts.json) { console.log(JSON.stringify(result, null, 2)); return; }
+    for (const item of result) {
+      if (item.text !== undefined) console.log(item.text);
+      else console.log(JSON.stringify(item, null, 2));
+    }
+  });
+
+// --- prompts ----------------------------------------------------------------
+
+const prompts = program.command("prompts").description("List and get prompt templates");
+
+headerOption(prompts
+  .command("list")
+  .description("List available prompts")
+  .option("--json", "Output raw JSON"))
+  .action(async (opts) => {
+    const client = buildClient(opts.header as string[]);
+    const result = await client.listPrompts();
+    if (opts.json) { console.log(JSON.stringify(result, null, 2)); return; }
+    if (result.length === 0) { console.log("No prompts available."); return; }
+    for (const p of result) {
+      const argList = (p.arguments ?? [])
+        .map((a) => (a.required ? a.name : `${a.name}?`))
+        .join(", ");
+      const sig = argList ? `(${argList})` : "";
+      console.log(`${p.name}${sig}${p.description ? ` — ${p.description}` : ""}`);
+    }
+  });
+
+headerOption(prompts
+  .command("get <name>")
+  .description("Get a prompt by name")
+  .option("-a, --args <json>", "Prompt arguments as a JSON string", "{}")
+  .option("--json", "Output raw JSON"))
+  .action(async (name: string, opts) => {
+    let args: Record<string, string>;
+    try {
+      args = JSON.parse(opts.args) as Record<string, string>;
+    } catch {
+      console.error("Error: --args must be valid JSON");
+      process.exit(1);
+    }
+    const client = buildClient(opts.header as string[]);
+    const result = await client.getPrompt(name, args);
+    if (opts.json) { console.log(JSON.stringify(result, null, 2)); return; }
+    for (const msg of result) {
+      const text = (msg.content as { type: string; text?: string }).text ?? JSON.stringify(msg.content);
+      console.log(`[${msg.role}] ${text}`);
+    }
+  });
+
+export { program };
 
 // Only parse when executed directly, not when imported in tests
 const { fileURLToPath } = await import("url");
