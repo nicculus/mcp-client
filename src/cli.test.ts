@@ -1,5 +1,42 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { parseHeaders } from "./cli.js";
+
+const { mockClientInstance, MockMCPClient } = vi.hoisted(() => {
+  const mockClientInstance = {
+    listTools: vi.fn().mockResolvedValue([]),
+    callTool: vi.fn().mockResolvedValue({ content: [] }),
+    listResources: vi.fn().mockResolvedValue([]),
+    readResource: vi.fn().mockResolvedValue([]),
+    listPrompts: vi.fn().mockResolvedValue([]),
+    getPrompt: vi.fn().mockResolvedValue([]),
+  };
+  return {
+    mockClientInstance,
+    MockMCPClient: vi.fn(() => mockClientInstance),
+  };
+});
+
+vi.mock("./client.js", () => ({ MCPClient: MockMCPClient }));
+
+import { parseHeaders, program } from "./cli.js";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockClientInstance.listTools.mockResolvedValue([]);
+  mockClientInstance.callTool.mockResolvedValue({ content: [] });
+  mockClientInstance.listResources.mockResolvedValue([]);
+  mockClientInstance.readResource.mockResolvedValue([]);
+  mockClientInstance.listPrompts.mockResolvedValue([]);
+  mockClientInstance.getPrompt.mockResolvedValue([]);
+});
+
+function run(args: string[]): Promise<string[]> {
+  const logs: string[] = [];
+  const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logs.push(a.join(" ")); });
+  return program.parseAsync(["node", "cli.js", ...args])
+    .then(() => { spy.mockRestore(); return logs; });
+}
+
+// --- parseHeaders ------------------------------------------------------------
 
 describe("parseHeaders", () => {
   const originalEnv = process.env;
@@ -68,5 +105,160 @@ describe("parseHeaders", () => {
     });
     expect(() => parseHeaders(["bad-header"])).toThrow();
     exitSpy.mockRestore();
+  });
+});
+
+// --- resources list ----------------------------------------------------------
+
+describe("resources list", () => {
+  beforeEach(() => {
+    process.env.MCP_ENDPOINT = "https://example.com/mcp";
+  });
+  afterEach(() => {
+    delete process.env.MCP_ENDPOINT;
+  });
+
+  it("prints uri and description for each resource", async () => {
+    mockClientInstance.listResources.mockResolvedValue([
+      { uri: "server://info", description: "Server info" },
+      { uri: "config://region" },
+    ]);
+    const logs = await run(["resources", "list"]);
+    expect(logs.some(l => l.includes("server://info"))).toBe(true);
+    expect(logs.some(l => l.includes("Server info"))).toBe(true);
+  });
+
+  it("prints 'No resources available.' when list is empty", async () => {
+    mockClientInstance.listResources.mockResolvedValue([]);
+    const logs = await run(["resources", "list"]);
+    expect(logs.some(l => l.includes("No resources available."))).toBe(true);
+  });
+
+  it("outputs raw JSON with --json", async () => {
+    mockClientInstance.listResources.mockResolvedValue([{ uri: "server://info" }]);
+    const logs = await run(["resources", "list", "--json"]);
+    const parsed = JSON.parse(logs[0]);
+    expect(Array.isArray(parsed)).toBe(true);
+  });
+
+  it("passes headers to the client", async () => {
+    await run(["resources", "list", "--header", "x-api-key:secret"]);
+    expect(MockMCPClient).toHaveBeenCalledWith(
+      expect.objectContaining({ headers: { "x-api-key": "secret" } })
+    );
+  });
+});
+
+// --- resources read ----------------------------------------------------------
+
+describe("resources read", () => {
+  beforeEach(() => {
+    process.env.MCP_ENDPOINT = "https://example.com/mcp";
+  });
+  afterEach(() => {
+    delete process.env.MCP_ENDPOINT;
+  });
+
+  it("prints text content from the resource", async () => {
+    mockClientInstance.readResource.mockResolvedValue([{ uri: "server://info", text: '{"name":"demo"}' }]);
+    const logs = await run(["resources", "read", "server://info"]);
+    expect(logs.some(l => l.includes('{"name":"demo"}'))).toBe(true);
+  });
+
+  it("outputs raw JSON with --json", async () => {
+    mockClientInstance.readResource.mockResolvedValue([{ uri: "server://info", text: "hello" }]);
+    const logs = await run(["resources", "read", "server://info", "--json"]);
+    const parsed = JSON.parse(logs[0]);
+    expect(Array.isArray(parsed)).toBe(true);
+  });
+
+  it("passes the URI to the client", async () => {
+    await run(["resources", "read", "config://region"]);
+    expect(mockClientInstance.readResource).toHaveBeenCalledWith("config://region");
+  });
+});
+
+// --- prompts list ------------------------------------------------------------
+
+describe("prompts list", () => {
+  beforeEach(() => {
+    process.env.MCP_ENDPOINT = "https://example.com/mcp";
+  });
+  afterEach(() => {
+    delete process.env.MCP_ENDPOINT;
+  });
+
+  it("prints name, args signature, and description", async () => {
+    mockClientInstance.listPrompts.mockResolvedValue([
+      { name: "analyze_endpoint", description: "Analyze an endpoint", arguments: [{ name: "url", required: true }, { name: "method", required: false }] },
+    ]);
+    const logs = await run(["prompts", "list"]);
+    const line = logs.join("\n");
+    expect(line).toContain("analyze_endpoint");
+    expect(line).toContain("Analyze an endpoint");
+    expect(line).toContain("url");
+    expect(line).toContain("method?");
+  });
+
+  it("prints 'No prompts available.' when list is empty", async () => {
+    mockClientInstance.listPrompts.mockResolvedValue([]);
+    const logs = await run(["prompts", "list"]);
+    expect(logs.some(l => l.includes("No prompts available."))).toBe(true);
+  });
+
+  it("outputs raw JSON with --json", async () => {
+    mockClientInstance.listPrompts.mockResolvedValue([{ name: "p", arguments: [] }]);
+    const logs = await run(["prompts", "list", "--json"]);
+    const parsed = JSON.parse(logs[0]);
+    expect(Array.isArray(parsed)).toBe(true);
+  });
+
+  it("passes headers to the client", async () => {
+    await run(["prompts", "list", "--header", "x-api-key:secret"]);
+    expect(MockMCPClient).toHaveBeenCalledWith(
+      expect.objectContaining({ headers: { "x-api-key": "secret" } })
+    );
+  });
+});
+
+// --- prompts get -------------------------------------------------------------
+
+describe("prompts get", () => {
+  beforeEach(() => {
+    process.env.MCP_ENDPOINT = "https://example.com/mcp";
+  });
+  afterEach(() => {
+    delete process.env.MCP_ENDPOINT;
+  });
+
+  it("prints [role] text for each message", async () => {
+    mockClientInstance.getPrompt.mockResolvedValue([
+      { role: "user", content: { type: "text", text: "Analyze https://example.com" } },
+    ]);
+    const logs = await run(["prompts", "get", "analyze_endpoint"]);
+    expect(logs.some(l => l.includes("[user]") && l.includes("Analyze https://example.com"))).toBe(true);
+  });
+
+  it("outputs raw JSON with --json", async () => {
+    mockClientInstance.getPrompt.mockResolvedValue([
+      { role: "user", content: { type: "text", text: "hello" } },
+    ]);
+    const logs = await run(["prompts", "get", "analyze_endpoint", "--json"]);
+    const parsed = JSON.parse(logs[0]);
+    expect(Array.isArray(parsed)).toBe(true);
+  });
+
+  it("passes name and args to the client", async () => {
+    await run(["prompts", "get", "analyze_endpoint", "--args", '{"url":"https://example.com"}']);
+    expect(mockClientInstance.getPrompt).toHaveBeenCalledWith(
+      "analyze_endpoint",
+      { url: "https://example.com" }
+    );
+  });
+
+  it("passes prompt name when no --args given", async () => {
+    await run(["prompts", "get", "analyze_endpoint"]);
+    const [name] = mockClientInstance.getPrompt.mock.calls[0];
+    expect(name).toBe("analyze_endpoint");
   });
 });
