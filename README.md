@@ -1,3 +1,8 @@
+> **This repo has moved.** Development continues at
+> [nicculus/simple-mcp](https://github.com/nicculus/simple-mcp/tree/main/client/js),
+> a monorepo combining this client, [mcp-client-python](https://github.com/nicculus/mcp-client-python),
+> and [mcp-infra](https://github.com/nicculus/mcp-infra). This repo will be archived.
+
 # @nicculus/mcp-client
 
 A TypeScript client library and CLI for connecting to a serverless MCP server over Streamable HTTP.
